@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Agent SEO</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    </head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="flex items-center justify-center">
+        <h1 class="flex items-center font-sans font-bold break-normal text-blue-500 px-2 py-8 text-2xl md:text-2xl ">
+            AGENT SEO
+        </h1>
+    </div>
+    <!-- Formulaire pour générer un produit -->
+    
+    <div class="container mx-auto p-4">
+        <form method="POST" action="/generate" id="product-form" class="bg-white p-6 rounded shadow-md">
+            <label for="product_name" class="block text-sm font-medium text-xl text-gray-700">Nom du produit :</label>
+            <input type="text" id="product_name" name="product_name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <div class=" flex items-center mt-4 py-4 ">
+                <button type="submit" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Générer</button>
+            </div>
+        </form>
+        <div id="result" class="mt-6"></div>
+        <div class="flex items-center justify-center">
+            <h1 class="flex items-center font-sans font-bold break-normal text-blue-500 px-2 py-8 text-xl md:text-2xl ">
+                PRODUITS GENERES 
+            </h1>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Handle</th>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Body (HTML)</th>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Publish</th>
+                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td class="py-2 px-4 border-b border-gray-200">{{ product.title }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200">{{ product.handle }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200"><div class="mt-1">{{ product.body_html|safe }}</div></td>
+                            <td class="py-2 px-4 border-b border-gray-200">{{ product.vendor }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200">{{ product.published }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200">
+                                <a href="/download/{{ product.handle }}" class="text-indigo-600 hover:text-indigo-900">Download_CSV</a>
+                                
+                                <button type="submit" class="btn btn-danger text-red-600" onclick="confirmDelete('{{ product.handle }}')">Delete</button>
+                                
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="/download/all" class="mt-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Download all products</a>
+
+    <script>
+        document.getElementById('product-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const productName = document.getElementById('product_name').value;
+
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ product_name: productName })
+            });
+
+            const data = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h2>Produit généré</h2>
+                <p><strong>Handle :</strong> ${data.handle}</p>
+                <p><strong>Description :</strong> ${data.body_html}</p>
+                <p><strong>Tags :</strong> ${data.tags}</p>
+            `;
+        });
+
+        // Fonction pour afficher un pop-up de confirmation et supprimer un produit
+        function confirmDelete(handle) {
+            if (confirm(`Voulez-vous vraiment supprimer le produit avec le handle "${handle}" ?`)) {
+                // Effectuer la requête POST pour supprimer le produit
+                fetch(`/delete/${handle}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message); // Afficher un message de succès
+                        location.reload();   // Recharger la page pour mettre à jour la liste
+                    } else {
+                        alert(data.error || "Une erreur est survenue."); // Afficher un message d'erreur
+                    }
+                })
+                .catch(error => {
+                    alert("Erreur lors de la suppression : " + error.message);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+ 
