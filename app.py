@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 
 # Configuration OpenAI
-openai.api_key = "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"  # Remplacez par votre clé OpenAI
+openai.api_key = "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 "  # Remplacez par votre clé OpenAI
 
 # Fonction pour générer le contenu du produit
 def generate_product_data(product_name):
